@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
 import { useGame } from '../../contexts/GameContext.jsx';
+import { useVoice } from '../../contexts/VoiceContext.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import AudioRenderer from '../common/AudioRenderer.jsx';
+import { setMuted } from '../../audio/audioEngine.js';
 
 export default function GameScreen() {
   const { state, actions } = useGame();
+  const { isMuted, toggleMute, micError } = useVoice();
   const [activeTab, setActiveTab] = useState('role'); // role, location, suspects, timeline, clues
+  const [musicMuted, setMusicMuted] = useState(false);
+
+  const toggleMusic = () => {
+    setMusicMuted(prev => {
+      const next = !prev;
+      setMuted(next);
+      return next;
+    });
+  };
 
   const mystery = state.room?.mysteryData;
   const myPlayerId = state.playerId;
@@ -45,15 +58,35 @@ export default function GameScreen() {
             {mystery.victim.backstory}
           </p>
         </div>
-        <button
-          onClick={() => {
-            actions.closeRoom();
-            window.location.href = '/';
-          }}
-          className="text-xs text-gray-600 hover:text-red-400 transition-colors"
-        >
-          [LEAVE GAME]
-        </button>
+        <div className="flex items-center gap-6">
+          <button
+            onClick={toggleMusic}
+            className={`text-xs px-3 py-1 border rounded transition-colors ${
+              musicMuted ? 'text-blue-400 border-blue-500/50 bg-blue-500/10' : 'text-red-400 border-red-500/50 bg-red-500/10'
+            }`}
+            title="Toggle Background Music"
+          >
+            {musicMuted ? '[MUSIC ON]' : '[MUSIC OFF]'}
+          </button>
+          <button
+            onClick={toggleMute}
+            className={`text-xs px-3 py-1 border rounded transition-colors ${
+              isMuted ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-red-400 border-red-500/50 bg-red-500/10'
+            }`}
+            title={micError || 'Toggle Microphone'}
+          >
+            {isMuted ? '[MIC ON]' : '[MIC OFF]'}
+          </button>
+          <button
+            onClick={() => {
+              actions.closeRoom();
+              window.location.href = '/';
+            }}
+            className="text-xs text-gray-600 hover:text-red-400 transition-colors"
+          >
+            [LEAVE GAME]
+          </button>
+        </div>
       </header>
 
       {/* Tabs */}
@@ -195,6 +228,8 @@ export default function GameScreen() {
           )}
         </AnimatePresence>
       </div>
+
+      <AudioRenderer />
     </motion.div>
   );
 }
