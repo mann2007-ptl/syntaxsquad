@@ -20,7 +20,7 @@ function HostGameModal({ onClose }) {
     e.preventDefault();
     playClickSound();
     if (!form.hostName.trim() || !form.roomName.trim()) return;
-    
+
     setLoading(true);
     await actions.createRoom(form);
     setLoading(false);
@@ -41,7 +41,7 @@ function HostGameModal({ onClose }) {
         exit={{ opacity: 0, y: 30 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-2xl w-[90vw] md:w-[80vw]"
-        style={{ 
+        style={{
           backgroundImage: `linear-gradient(rgba(12, 10, 10, 0.88), rgba(12, 10, 10, 0.92)), url(${modalBg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -78,7 +78,7 @@ function HostGameModal({ onClose }) {
               autoFocus
               required
               className="w-full bg-stone-950/80 outline-none text-xl py-4 px-5 text-stone-100 border border-stone-800 focus:border-red-900/80 transition-colors placeholder:text-stone-700 placeholder:italic focus:bg-stone-900"
-              style={{ 
+              style={{
                 fontFamily: 'var(--font-family-old), IM Fell English, serif'
               }}
             />
@@ -98,7 +98,7 @@ function HostGameModal({ onClose }) {
               onMouseEnter={playHoverSound}
               required
               className="w-full bg-stone-950/80 outline-none text-xl py-4 px-5 text-stone-100 border border-stone-800 focus:border-red-900/80 transition-colors placeholder:text-stone-700 placeholder:italic focus:bg-stone-900"
-              style={{ 
+              style={{
                 fontFamily: 'var(--font-family-old), IM Fell English, serif'
               }}
             />
@@ -170,7 +170,7 @@ function HostGameModal({ onClose }) {
                 disabled={loading || !form.hostName.trim() || !form.roomName.trim()}
                 onMouseEnter={playHoverSound}
                 className="text-xl uppercase tracking-[0.2em] transition-colors"
-                style={{ 
+                style={{
                   color: loading || !form.hostName.trim() || !form.roomName.trim() ? 'rgba(255,255,255,0.15)' : 'rgba(210, 190, 160, 0.9)',
                   cursor: loading ? 'wait' : 'pointer',
                   background: 'none',
