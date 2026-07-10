@@ -3,7 +3,7 @@ import { useGame } from '../../contexts/GameContext.jsx';
 import { useVoice } from '../../contexts/VoiceContext.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound, playHoverSound, setMuted } from '../../audio/audioEngine.js';
-import RoomExploration from './RoomExploration.jsx';
+import RoomExploration2D from './RoomExploration2D.jsx';
 
 export default function GameScreen() {
   const { state, actions } = useGame();
@@ -37,7 +37,7 @@ export default function GameScreen() {
 
   // ── Room Exploration Phase ──
   if (phase === 'exploring') {
-    return <RoomExploration />;
+    return <RoomExploration2D />;
   }
 
   // ── Briefing Phase ──

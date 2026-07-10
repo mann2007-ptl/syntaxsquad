@@ -7,6 +7,9 @@ import { generateMysteryData } from '../utils/aiService.js';
 // Track socket -> player mapping for reconnection
 const socketPlayerMap = new Map();
 
+// Track real-time 2D map positions
+const roomPlayerPositions = {};
+
 export default function setupSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log(`[Socket] Connected: ${socket.id}`);
@@ -443,6 +446,32 @@ export default function setupSocketHandlers(io) {
       } catch (error) {
         console.error('[Socket] start-game error:', error);
         callback?.({ success: false, error: 'The ritual failed...' });
+      }
+    });
+
+    // ─── PLAYER MOVEMENT (2D MAP) ───
+    socket.on('player-move', (data) => {
+      // data: { roomCode, playerId, x, y, direction, isMoving }
+      if (data.roomCode && data.playerId) {
+        if (!roomPlayerPositions[data.roomCode]) {
+          roomPlayerPositions[data.roomCode] = {};
+        }
+        roomPlayerPositions[data.roomCode][data.playerId] = {
+          x: data.x,
+          y: data.y,
+          direction: data.direction,
+          isMoving: data.isMoving
+        };
+        // Broadcast movement to everyone else in the room
+        socket.to(data.roomCode).emit('player-moved', data);
+      }
+    });
+
+    socket.on('request-sync-positions', (data, callback) => {
+      if (data.roomCode && roomPlayerPositions[data.roomCode]) {
+        callback({ positions: roomPlayerPositions[data.roomCode] });
+      } else {
+        callback({ positions: {} });
       }
     });
 
