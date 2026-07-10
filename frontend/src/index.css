@@ -1,68 +1,556 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+/* ═══════════════════════════════════════════
+   TALES BEYOND THE TOMB — HORROR GAME UI
+   ═══════════════════════════════════════════ */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  --color-blood: #8b0000;
+  --color-blood-dark: #5c0000;
+  --color-blood-glow: #ff1a1a;
+  --color-crimson: #6b0f1a;
+  --color-gold: #b8860b;
+  --color-gold-dim: #8b6914;
+  --color-gold-bright: #daa520;
+  --color-bone: #d4c5a9;
+  --color-bone-dark: #a89272;
+  --color-mansion-black: #0a0a0a;
+  --color-mansion-dark: #111111;
+  --color-mansion-gray: #1a1a1a;
+  --color-mansion-mid: #2a2a2a;
+  --color-fog: rgba(180, 200, 220, 0.03);
+  --color-moonlight: #4a6fa5;
+  --color-moonlight-dim: #2d4a6f;
+
+  --font-family-title: 'Cinzel Decorative', serif;
+  --font-family-heading: 'Cinzel', serif;
+  --font-family-body: 'Cormorant Garamond', serif;
+  --font-family-old: 'IM Fell English', serif;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
+/* ─── Global Reset ─── */
+* {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: var(--color-bone);
+  font-family: var(--font-family-body);
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+/* Hide default cursor globally */
+/* (Custom cursor applied via React) */
+
+::selection {
+  background: var(--color-blood);
+  color: var(--color-bone);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(10, 10, 10, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-blood-dark);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-blood);
+}
+
+/* ─── Background Layers ─── */
+.bg-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-image {
+  position: absolute;
+  inset: -20px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.4) contrast(1.2) saturate(0.6);
+  animation: slowZoom 120s ease-in-out infinite alternate;
+}
+
+@keyframes slowZoom {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.08) translate(-10px, -5px); }
+  100% { transform: scale(1.03) translate(5px, 3px); }
+}
+
+/* Dark overlay */
+.bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none;
+}
+
+/* Vignette */
+.bg-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.9) 100%);
+}
+
+/* Film grain */
+.bg-grain {
+  position: absolute;
+  inset: -100%;
+  width: 300%;
+  height: 300%;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0.04;
+  animation: grainShift 0.5s steps(4) infinite;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+@keyframes grainShift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-5%, -5%); }
+  50% { transform: translate(5%, 0%); }
+  75% { transform: translate(-2%, 5%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* CRT Scanlines */
+.bg-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  animation: scanlineFlicker 8s ease-in-out infinite;
+}
+
+@keyframes scanlineFlicker {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.1; }
+}
+
+/* Fog layer */
+.bg-fog {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.15;
+  background: 
+    radial-gradient(ellipse at 20% 80%, rgba(180,200,220,0.2) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(180,200,220,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(200,210,230,0.1) 0%, transparent 70%);
+  animation: fogDrift 30s ease-in-out infinite alternate;
+}
+
+@keyframes fogDrift {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.12; }
+  33% { transform: translate(30px, -20px) scale(1.05); opacity: 0.18; }
+  66% { transform: translate(-20px, 10px) scale(0.98); opacity: 0.14; }
+  100% { transform: translate(10px, -10px) scale(1.02); opacity: 0.16; }
+}
+
+/* Rain overlay */
+.bg-rain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2' height='40'%3E%3Cline x1='1' y1='0' x2='1' y2='40' stroke='%23889bb8' stroke-width='0.5' opacity='0.4'/%3E%3C/svg%3E");
+  background-size: 30px 40px;
+  animation: rain 0.8s linear infinite;
+}
+
+@keyframes rain {
+  0% { background-position: 0 0; }
+  100% { background-position: 15px 40px; }
+}
+
+/* Lightning flash */
+.lightning-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  background: rgba(180, 200, 230, 0.15);
+  opacity: 0;
+}
+
+/* ─── Particles (dust, ash) ─── */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ─── Typography ─── */
+.game-title {
+  font-family: var(--font-family-title);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-bone);
+  text-shadow: 
+    0 0 20px rgba(139, 0, 0, 0.5),
+    0 0 40px rgba(139, 0, 0, 0.3),
+    0 0 80px rgba(139, 0, 0, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.game-subtitle {
+  font-family: var(--font-family-old);
+  font-style: italic;
+  color: var(--color-bone-dark);
+  letter-spacing: 0.2em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* ─── Horror Button ─── */
+.horror-btn {
+  position: relative;
+  font-family: var(--font-family-heading);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-bone);
+  background: linear-gradient(180deg, rgba(30,20,15,0.9) 0%, rgba(15,10,8,0.95) 100%);
+  border: 1px solid rgba(139, 0, 0, 0.4);
+  padding: 18px 48px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+.horror-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(139, 0, 0, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.horror-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.horror-btn:hover {
+  border-color: var(--color-blood);
+  box-shadow: 
+    0 0 20px rgba(139, 0, 0, 0.3),
+    0 0 40px rgba(139, 0, 0, 0.15),
+    inset 0 0 20px rgba(139, 0, 0, 0.1);
+  transform: scale(1.02);
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+}
+
+.horror-btn:active {
+  transform: scale(0.98);
+}
+
+.horror-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  border-color: rgba(60, 60, 60, 0.3);
+}
+
+.horror-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ─── Horror Input ─── */
+.horror-input {
+  font-family: var(--font-family-body);
+  font-size: 1.05rem;
+  color: var(--color-bone);
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(139, 0, 0, 0.25);
+  padding: 14px 18px;
+  width: 100%;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.horror-input:focus {
+  border-color: var(--color-blood);
+  box-shadow: 
+    0 0 10px rgba(139, 0, 0, 0.2),
+    inset 0 0 10px rgba(139, 0, 0, 0.05);
+}
+
+.horror-input::placeholder {
+  color: rgba(160, 140, 120, 0.4);
+  font-style: italic;
+}
+
+/* ─── Horror Select ─── */
+.horror-select {
+  font-family: var(--font-family-body);
+  font-size: 1.05rem;
+  color: var(--color-bone);
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid rgba(139, 0, 0, 0.25);
+  padding: 14px 18px;
+  width: 100%;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b6914'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+}
+
+.horror-select:focus {
+  border-color: var(--color-blood);
+  box-shadow: 0 0 10px rgba(139, 0, 0, 0.2);
+}
+
+.horror-select option {
+  background: #111;
+  color: var(--color-bone);
+}
+
+/* ─── Modal ─── */
+.horror-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.horror-modal {
+  position: relative;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(20,15,12,0.98) 0%, rgba(10,8,6,0.99) 100%);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  box-shadow: 
+    0 0 60px rgba(139, 0, 0, 0.15),
+    0 0 120px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(184, 134, 11, 0.1);
+  padding: 40px;
+}
+
+.horror-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-gold-dim), transparent);
+}
+
+/* ─── Player Card ─── */
+.player-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(20,15,12,0.9) 0%, rgba(12,9,7,0.95) 100%);
+  border: 1px solid rgba(139, 0, 0, 0.2);
+  padding: 16px 20px;
+  transition: all 0.4s ease;
+  overflow: hidden;
+}
+
+.player-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-blood-dark);
+  transition: all 0.3s ease;
+}
+
+.player-card:hover {
+  border-color: rgba(139, 0, 0, 0.5);
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.1);
+}
+
+.player-card:hover::before {
+  background: var(--color-blood);
+  box-shadow: 0 0 10px var(--color-blood);
+}
+
+.player-card.is-host::before {
+  background: var(--color-gold);
+}
+
+.player-card.disconnected {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+
+/* ─── Chat ─── */
+.chat-container {
+  background: rgba(5, 5, 5, 0.8);
+  border: 1px solid rgba(139, 0, 0, 0.15);
+  border-top: none;
+}
+
+.chat-message {
+  padding: 6px 12px;
+  font-family: var(--font-family-body);
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(30, 30, 30, 0.5);
+}
+
+.chat-message.system {
+  color: var(--color-moonlight);
+  font-style: italic;
+  opacity: 0.7;
+}
+
+.chat-message .player-name {
+  color: var(--color-gold);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+/* ─── Panels ─── */
+.panel {
+  background: linear-gradient(180deg, rgba(15,12,10,0.9) 0%, rgba(8,6,5,0.95) 100%);
+  border: 1px solid rgba(139, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.panel-header {
+  font-family: var(--font-family-heading);
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-gold-dim);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Custom Cursor ─── */
+.custom-cursor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}
+
+.cursor-glow {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 180, 80, 0.06) 0%,
+    rgba(255, 140, 40, 0.03) 30%,
+    transparent 70%
+  );
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-gold-bright);
+  box-shadow: 0 0 8px var(--color-gold), 0 0 16px rgba(184, 134, 11, 0.3);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .horror-btn {
+    padding: 14px 32px;
+    font-size: 0.85rem;
   }
-  a:hover {
-    color: #747bff;
+  
+  .horror-modal {
+    padding: 24px;
+    max-height: 85vh;
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@media (max-width: 480px) {
+  .horror-btn {
+    padding: 12px 24px;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
   }
+}
+
+/* ─── Heartbeat Animation ─── */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.04); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.02); }
+  60% { transform: scale(1); }
+}
+
+/* ─── Flicker ─── */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  41% { opacity: 1; }
+  42% { opacity: 0.8; }
+  43% { opacity: 1; }
+  44% { opacity: 0.6; }
+  45% { opacity: 1; }
+  80% { opacity: 1; }
+  81% { opacity: 0.7; }
+  82% { opacity: 1; }
+}
+
+/* ─── Typewriter cursor ─── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--color-blood);
+  margin-left: 2px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
 }
