@@ -110,7 +110,7 @@ function HostGameModal({ onClose }) {
               Max Players
             </label>
             <div className="flex gap-6">
-              {[4, 6, 8].map(num => (
+              {[2, 4, 6, 8].map(num => (
                 <button
                   key={num}
                   type="button"

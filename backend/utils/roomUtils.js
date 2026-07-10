@@ -38,8 +38,8 @@ export function validateRoomSettings(settings) {
   if (!settings.roomName || settings.roomName.trim().length === 0) {
     errors.push('Room name is required');
   }
-  if (![4, 6, 8].includes(settings.maxPlayers)) {
-    errors.push('Max players must be 4, 6, or 8');
+  if (![2, 4, 6, 8].includes(settings.maxPlayers)) {
+    errors.push('Max players must be 2, 4, 6, or 8');
   }
   if (!['easy', 'medium', 'hard'].includes(settings.difficulty)) {
     errors.push('Invalid difficulty');
