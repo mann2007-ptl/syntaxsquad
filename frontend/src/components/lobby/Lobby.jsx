@@ -1,16 +1,28 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../contexts/GameContext.jsx';
-import { playClickSound, playHoverSound } from '../../audio/audioEngine.js';
+import { playClickSound, playHoverSound, setMuted } from '../../audio/audioEngine.js';
 import PlayerList from './PlayerList.jsx';
 import RightPanel from './RightPanel.jsx';
 import ChatPanel from './ChatPanel.jsx';
 import LobbyHeader from './LobbyHeader.jsx';
 import CountdownOverlay from './CountdownOverlay.jsx';
+import { useVoice } from '../../contexts/VoiceContext.jsx';
+import AudioRenderer from '../common/AudioRenderer.jsx';
 
 function Lobby() {
   const { state, actions } = useGame();
+  const { isMuted, toggleMute, micError } = useVoice();
   const { room, playerId } = state;
+  const [musicMuted, setMusicMuted] = useState(false);
+
+  const toggleMusic = () => {
+    setMusicMuted(prev => {
+      const next = !prev;
+      setMuted(next);
+      return next;
+    });
+  };
 
   const isHost = useMemo(() => room?.hostId === playerId, [room?.hostId, playerId]);
   const connectedPlayers = useMemo(() => 
@@ -49,6 +61,41 @@ function Lobby() {
 
             {/* Action Buttons */}
             <div className="flex gap-8 justify-center flex-wrap pt-6" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
+              
+              {/* Music Toggle */}
+              <button
+                onClick={() => {
+                  playClickSound();
+                  toggleMusic();
+                }}
+                onMouseEnter={playHoverSound}
+                className="horror-btn text-lg px-8 py-5"
+                style={{
+                  borderColor: musicMuted ? 'rgba(74, 158, 255, 0.6)' : 'rgba(255, 60, 60, 0.6)',
+                  color: musicMuted ? '#4e9eff' : '#ff4d4d'
+                }}
+                title="Toggle Background Music"
+              >
+                {musicMuted ? 'Music On' : 'Music Off'}
+              </button>
+
+              {/* Mic Toggle */}
+              <button
+                onClick={() => {
+                  playClickSound();
+                  toggleMute();
+                }}
+                onMouseEnter={playHoverSound}
+                className="horror-btn text-lg px-8 py-5"
+                style={{
+                  borderColor: isMuted ? 'rgba(74, 158, 74, 0.6)' : 'rgba(255, 60, 60, 0.6)',
+                  color: isMuted ? '#4ea366' : '#ff4d4d'
+                }}
+                title={micError || 'Toggle Microphone'}
+              >
+                {isMuted ? 'Mic On' : 'Mic Off'}
+              </button>
+
               {/* Ready / Unready */}
               {!isHost && myPlayer && (
                 <button
@@ -132,6 +179,8 @@ function Lobby() {
           <CountdownOverlay count={state.countdown} />
         )}
       </AnimatePresence>
+
+      <AudioRenderer />
     </>
   );
 }

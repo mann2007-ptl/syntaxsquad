@@ -28,7 +28,7 @@ function AudioControls() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 1, duration: 1 }}
-      className="fixed top-4 right-4 z-50 flex items-center gap-3"
+      className="fixed bottom-4 right-4 z-[100] flex items-center gap-3"
       onMouseEnter={() => setShowSlider(true)}
       onMouseLeave={() => setShowSlider(false)}
     >
