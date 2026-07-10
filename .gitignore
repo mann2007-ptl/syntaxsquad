@@ -1,0 +1,3 @@
+# Ignore backend dependencies and local environment
+backend/node_modules/
+backend/.env
