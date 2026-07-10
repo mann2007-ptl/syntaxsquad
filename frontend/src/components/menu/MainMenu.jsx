@@ -77,35 +77,33 @@ function MainMenu() {
           className="flex flex-col gap-4 items-center"
           style={{ fontFamily: 'monospace' }}
         >
-          <button
+          <motion.button
             onClick={openHost}
-            className="text-lg transition-colors duration-300 tracking-wider"
-            style={{ 
-              color: 'rgba(255,255,255,0.7)',
-              cursor: 'pointer',
-              background: 'none',
-              border: 'none'
+            className="horror-btn text-lg md:text-xl px-12 md:px-16 py-5 md:py-6"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onMouseEnter={playHoverSound}
+            style={{
+              letterSpacing: '0.3em',
+              borderColor: 'rgba(184, 134, 11, 0.4)'
             }}
-            onMouseEnter={(e) => { e.target.style.color = '#fff'; playHoverSound(); }}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(255,255,255,0.7)'}
           >
             Host Game
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={openJoin}
-            className="text-lg transition-colors duration-300 tracking-wider"
-            style={{ 
-              color: 'rgba(255,255,255,0.7)',
-              cursor: 'pointer',
-              background: 'none',
-              border: 'none'
+            className="horror-btn text-lg md:text-xl px-12 md:px-16 py-5 md:py-6"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onMouseEnter={playHoverSound}
+            style={{
+              letterSpacing: '0.3em',
+              borderColor: 'rgba(184, 134, 11, 0.4)'
             }}
-            onMouseEnter={(e) => { e.target.style.color = '#fff'; playHoverSound(); }}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(255,255,255,0.7)'}
           >
             Join Game
-          </button>
+          </motion.button>
         </motion.div>
 
         {/* Version */}

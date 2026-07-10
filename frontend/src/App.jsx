@@ -8,6 +8,7 @@ import MainMenu from './components/menu/MainMenu.jsx';
 import Lobby from './components/lobby/Lobby.jsx';
 import GameScreen from './components/game/GameScreen.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { playClickSound, playHoverSound } from './audio/audioEngine.js';
 
 function AppContent() {
   const { state, actions, dispatch } = useGame();

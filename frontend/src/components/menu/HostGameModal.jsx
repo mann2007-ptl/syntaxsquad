@@ -1,7 +1,7 @@
 import { useState, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../contexts/GameContext.jsx';
-import { playClickSound } from '../../audio/audioEngine.js';
+import { playClickSound, playHoverSound } from '../../audio/audioEngine.js';
 
 function HostGameModal({ onClose }) {
   const { actions, state } = useGame();
@@ -31,38 +31,37 @@ function HostGameModal({ onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.7)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 20 }}
+        exit={{ opacity: 0, y: 30 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        className="w-full max-w-2xl p-10 md:p-12"
         style={{ 
-          background: 'rgba(15,15,15,0.95)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          fontFamily: 'monospace'
+          background: 'rgba(12, 10, 10, 0.98)',
+          border: '1px solid rgba(139, 0, 0, 0.3)',
+          boxShadow: '0 0 50px rgba(0, 0, 0, 0.9)'
         }}
       >
         {/* Header */}
-        <div className="px-8 pt-8 pb-4">
-          <h2 className="text-lg" style={{ color: '#fff', letterSpacing: '0.1em' }}>
+        <div className="mb-8">
+          <h2 className="text-3xl md:text-4xl text-stone-100 tracking-wider mb-2" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
             Host Game
           </h2>
-          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Create a new session
+          <p className="text-sm text-stone-400" style={{ fontFamily: 'var(--font-family-body), Cormorant Garamond, serif' }}>
+            Create a new session to begin the investigation
           </p>
         </div>
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)', margin: '0 2rem' }} />
+        <div style={{ height: '1px', background: 'rgba(139, 0, 0, 0.2)', marginBottom: '2rem' }} />
 
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Host Name */}
           <div>
-            <label className="block mb-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block mb-2 text-base text-stone-300 uppercase tracking-widest" style={{ fontFamily: 'var(--font-family-old), IM Fell English, serif' }}>
               Your Name
             </label>
             <input
@@ -71,20 +70,19 @@ function HostGameModal({ onClose }) {
               maxLength={20}
               value={form.hostName}
               onChange={(e) => setForm(prev => ({ ...prev, hostName: e.target.value }))}
+              onMouseEnter={playHoverSound}
               autoFocus
               required
-              className="w-full bg-transparent outline-none text-sm py-2"
+              className="w-full bg-stone-950/60 outline-none text-lg py-3 px-4 text-stone-100 border border-stone-800 focus:border-red-900/60 transition-colors"
               style={{ 
-                color: '#fff',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                fontFamily: 'monospace'
+                fontFamily: 'var(--font-family-old), IM Fell English, serif'
               }}
             />
           </div>
 
           {/* Room Name */}
           <div>
-            <label className="block mb-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block mb-2 text-base text-stone-300 uppercase tracking-widest" style={{ fontFamily: 'var(--font-family-old), IM Fell English, serif' }}>
               Room Name
             </label>
             <input
@@ -93,19 +91,18 @@ function HostGameModal({ onClose }) {
               maxLength={30}
               value={form.roomName}
               onChange={(e) => setForm(prev => ({ ...prev, roomName: e.target.value }))}
+              onMouseEnter={playHoverSound}
               required
-              className="w-full bg-transparent outline-none text-sm py-2"
+              className="w-full bg-stone-950/60 outline-none text-lg py-3 px-4 text-stone-100 border border-stone-800 focus:border-red-900/60 transition-colors"
               style={{ 
-                color: '#fff',
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                fontFamily: 'monospace'
+                fontFamily: 'var(--font-family-old), IM Fell English, serif'
               }}
             />
           </div>
 
           {/* Max Players */}
           <div>
-            <label className="block mb-3 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <label className="block mb-3 text-base text-stone-300 uppercase tracking-widest" style={{ fontFamily: 'var(--font-family-old), IM Fell English, serif' }}>
               Max Players
             </label>
             <div className="flex gap-4">
@@ -114,16 +111,17 @@ function HostGameModal({ onClose }) {
                   key={num}
                   type="button"
                   onClick={() => { playClickSound(); setForm(prev => ({ ...prev, maxPlayers: num })); }}
-                  className="px-4 py-2 text-sm transition-colors duration-200"
+                  onMouseEnter={playHoverSound}
+                  className="px-6 py-2.5 text-base transition-colors duration-200"
                   style={{
-                    color: form.maxPlayers === num ? '#fff' : 'rgba(255,255,255,0.25)',
-                    background: form.maxPlayers === num ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    border: `1px solid ${form.maxPlayers === num ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)'}`,
+                    color: form.maxPlayers === num ? '#fff' : 'rgba(255,255,255,0.4)',
+                    background: form.maxPlayers === num ? 'rgba(139, 0, 0, 0.15)' : 'rgba(0,0,0,0.3)',
+                    border: `1px solid ${form.maxPlayers === num ? 'rgba(139, 0, 0, 0.4)' : 'rgba(255,255,255,0.06)'}`,
                     cursor: 'pointer',
-                    fontFamily: 'monospace'
+                    fontFamily: 'var(--font-family-old), IM Fell English, serif'
                   }}
                 >
-                  {num}
+                  {num} Players
                 </button>
               ))}
             </div>
@@ -136,36 +134,38 @@ function HostGameModal({ onClose }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-xs py-2"
-                style={{ color: 'rgba(200,50,50,0.7)' }}
+                className="text-sm py-1 text-red-700"
+                style={{ fontFamily: 'var(--font-family-body), Cormorant Garamond, serif' }}
               >
                 {state.error}
               </motion.p>
             )}
           </AnimatePresence>
 
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.04)' }} />
+          <div style={{ height: '1px', background: 'rgba(139, 0, 0, 0.2)', marginTop: '2rem', marginBottom: '1.5rem' }} />
 
           {/* Buttons */}
-          <div className="flex gap-6 pt-2">
+          <div className="flex gap-8">
             <button
               type="button"
               onClick={() => { playClickSound(); onClose(); }}
-              className="text-sm transition-colors duration-200"
-              style={{ color: 'rgba(255,255,255,0.3)', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'monospace' }}
+              onMouseEnter={playHoverSound}
+              className="text-lg text-stone-400 hover:text-stone-200 transition-colors uppercase tracking-widest"
+              style={{ cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-family-heading), Cinzel, serif' }}
             >
               [cancel]
             </button>
             <button
               type="submit"
               disabled={loading || !form.hostName.trim() || !form.roomName.trim()}
-              className="text-sm transition-colors duration-200"
+              onMouseEnter={playHoverSound}
+              className="text-lg uppercase tracking-widest transition-colors"
               style={{ 
-                color: loading || !form.hostName.trim() || !form.roomName.trim() ? 'rgba(255,255,255,0.15)' : '#fff',
+                color: loading || !form.hostName.trim() || !form.roomName.trim() ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.85)',
                 cursor: loading ? 'wait' : 'pointer',
                 background: 'none',
                 border: 'none',
-                fontFamily: 'monospace'
+                fontFamily: 'var(--font-family-heading), Cinzel, serif'
               }}
             >
               {loading ? '[creating...]' : '[create room]'}

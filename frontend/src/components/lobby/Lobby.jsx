@@ -48,7 +48,7 @@ function Lobby() {
             />
 
             {/* Action Buttons */}
-            <div className="flex gap-8 justify-center flex-wrap pt-6" style={{ fontFamily: 'monospace' }}>
+            <div className="flex gap-8 justify-center flex-wrap pt-6" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
               {/* Ready / Unready */}
               {!isHost && myPlayer && (
                 <button
@@ -56,15 +56,14 @@ function Lobby() {
                     playClickSound();
                     actions.setReady(!myPlayer.isReady);
                   }}
-                  className="text-sm transition-colors duration-200 px-6 py-3"
-                  style={{ 
-                    color: myPlayer.isReady ? 'rgba(74,158,74,0.8)' : 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer',
-                    background: 'rgba(0,0,0,0.3)',
-                    border: '1px solid rgba(255,255,255,0.06)'
+                  onMouseEnter={playHoverSound}
+                  className="horror-btn text-lg px-12 py-5"
+                  style={{
+                    borderColor: myPlayer.isReady ? 'rgba(74, 158, 74, 0.6)' : 'rgba(139, 0, 0, 0.4)',
+                    color: myPlayer.isReady ? '#4ea366' : '#fff'
                   }}
                 >
-                  {myPlayer.isReady ? '[ ready ]' : '[ not ready ]'}
+                  {myPlayer.isReady ? 'ready' : 'not ready'}
                 </button>
               )}
 
@@ -75,18 +74,16 @@ function Lobby() {
                     playClickSound();
                     actions.startGame();
                   }}
+                  onMouseEnter={playHoverSound}
                   disabled={connectedPlayers.length < 2}
-                  className="text-sm transition-colors duration-200 px-8 py-3"
-                  style={{ 
-                    color: connectedPlayers.length >= 2 ? '#fff' : 'rgba(255,255,255,0.2)',
-                    cursor: connectedPlayers.length >= 2 ? 'pointer' : 'not-allowed',
-                    background: 'rgba(0,0,0,0.3)',
-                    border: `1px solid ${connectedPlayers.length >= 2 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)'}`
+                  className="horror-btn text-lg px-12 py-5"
+                  style={{
+                    borderColor: connectedPlayers.length >= 2 ? 'rgba(184, 134, 11, 0.5)' : 'rgba(139, 0, 0, 0.15)'
                   }}
                 >
                   {connectedPlayers.length < 2 
-                    ? `[ waiting for ${2 - connectedPlayers.length} more ]` 
-                    : '[ start game ]'}
+                    ? `waiting for ${2 - connectedPlayers.length} more` 
+                    : 'start game'}
                 </button>
               )}
 
@@ -96,15 +93,14 @@ function Lobby() {
                   playClickSound();
                   actions.leaveRoom();
                 }}
-                className="text-sm transition-colors duration-200 px-6 py-3"
-                style={{ 
-                  color: 'rgba(200,50,50,0.5)',
-                  cursor: 'pointer',
-                  background: 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.04)'
+                onMouseEnter={playHoverSound}
+                className="horror-btn text-lg px-12 py-5"
+                style={{
+                  borderColor: 'rgba(200, 50, 50, 0.5)',
+                  color: 'rgba(255, 255, 255, 0.8)'
                 }}
               >
-                [ leave ]
+                leave
               </button>
             </div>
           </div>

@@ -1,25 +1,23 @@
 import { memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../contexts/GameContext.jsx';
-import { playClickSound } from '../../audio/audioEngine.js';
-
-const AVATARS = ['💀', '👻', '🦇', '🕷️', '🐺', '🧟', '🎃', '👁️'];
+import { playClickSound, playHoverSound } from '../../audio/audioEngine.js';
 
 function PlayerList({ players, playerId, isHost, maxPlayers }) {
   const { actions } = useGame();
   const emptySlots = maxPlayers - players.length;
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.04)' }}>
+    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'rgba(12, 10, 10, 0.4)', border: '1px solid rgba(139, 0, 0, 0.15)' }}>
       {/* Header */}
       <div 
-        className="flex items-center justify-between px-5 py-3"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'monospace' }}
+        className="flex items-center justify-between px-6 py-4"
+        style={{ borderBottom: '1px solid rgba(139, 0, 0, 0.15)', background: 'rgba(0,0,0,0.2)' }}
       >
-        <span className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          Players
+        <span className="text-sm uppercase tracking-widest text-stone-400" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
+          Players Investigation Group
         </span>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        <span className="text-sm text-stone-500 font-bold" style={{ fontFamily: 'var(--font-family-old), IM Fell English, serif' }}>
           {players.filter(p => p.isConnected).length} / {maxPlayers}
         </span>
       </div>
@@ -35,47 +33,47 @@ function PlayerList({ players, playerId, isHost, maxPlayers }) {
               exit={{ opacity: 0, x: 10 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               layout
-              className="flex items-center justify-between px-5 py-4"
+              className="flex items-center justify-between px-6 py-5 border-b border-stone-900/40"
               style={{ 
-                borderBottom: '1px solid rgba(255,255,255,0.03)',
-                opacity: player.isConnected ? 1 : 0.3
+                opacity: player.isConnected ? 1 : 0.35
               }}
             >
               <div className="flex items-center gap-4">
-                {/* Simple dot indicator */}
+                {/* Status Dot */}
                 <span 
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ 
-                    background: !player.isConnected ? '#553333' : player.isReady ? '#4a9e4a' : '#666'
+                    background: !player.isConnected ? '#5a2d2d' : player.isReady ? '#2a6a3a' : '#555',
+                    boxShadow: player.isReady && player.isConnected ? '0 0 8px rgba(42, 106, 58, 0.6)' : 'none'
                   }}
                 />
                 
-                {/* Name */}
+                {/* Name - Bigger and better styled */}
                 <span 
-                  className="text-sm"
+                  className="text-xl md:text-2xl text-stone-200"
                   style={{ 
-                    fontFamily: 'monospace',
-                    color: player.playerId === playerId ? '#fff' : 'rgba(255,255,255,0.7)'
+                    fontFamily: 'var(--font-family-old), IM Fell English, serif',
+                    letterSpacing: '0.04em'
                   }}
                 >
                   {player.name}
                   {player.playerId === playerId && (
-                    <span style={{ color: 'rgba(255,255,255,0.3)' }}> (you)</span>
+                    <span className="text-sm text-stone-500 italic"> (you)</span>
                   )}
                 </span>
                 
                 {player.isHost && (
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>
+                  <span className="text-xs px-2 py-0.5 bg-stone-950 text-stone-500 uppercase tracking-widest border border-stone-850" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
                     host
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 {/* Status text */}
-                <span className="text-xs" style={{ 
-                  fontFamily: 'monospace',
-                  color: !player.isConnected ? '#553333' : player.isReady ? 'rgba(74,158,74,0.7)' : 'rgba(255,255,255,0.2)'
+                <span className="text-sm uppercase tracking-wider" style={{ 
+                  fontFamily: 'var(--font-family-old), IM Fell English, serif',
+                  color: !player.isConnected ? '#5a2d2d' : player.isReady ? '#4ea366' : 'rgba(255,255,255,0.25)'
                 }}>
                   {!player.isConnected ? 'disconnected' : player.isReady ? 'ready' : 'not ready'}
                 </span>
@@ -85,8 +83,9 @@ function PlayerList({ players, playerId, isHost, maxPlayers }) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => { playClickSound(); actions.kickPlayer(player.playerId); }}
-                      className="text-xs transition-colors duration-200"
-                      style={{ color: 'rgba(200,50,50,0.5)', cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'monospace' }}
+                      onMouseEnter={playHoverSound}
+                      className="text-xs text-red-900/80 hover:text-red-600 transition-colors uppercase tracking-widest pl-3 border-l border-stone-800"
+                      style={{ cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-family-heading), Cinzel, serif' }}
                     >
                       [kick]
                     </button>
@@ -103,12 +102,11 @@ function PlayerList({ players, playerId, isHost, maxPlayers }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 + i * 0.1 }}
-              className="px-5 py-4 flex items-center gap-4"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}
+              className="px-6 py-5 flex items-center gap-4 border-b border-stone-900/20"
             >
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }} />
-              <span className="text-sm" style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.1)' }}>
-                - - -
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: 'rgba(255,255,255,0.03)' }} />
+              <span className="text-xl md:text-2xl text-stone-700 italic" style={{ fontFamily: 'var(--font-family-old), IM Fell English, serif' }}>
+                - empty slot -
               </span>
             </motion.div>
           ))}
