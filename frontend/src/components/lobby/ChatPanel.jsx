@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useGame } from '../../contexts/GameContext.jsx';
 import { playClickSound } from '../../audio/audioEngine.js';
 
@@ -6,29 +6,38 @@ function ChatPanel() {
   const { state, actions } = useGame();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
+  // Auto-scroll only if user is already near the bottom
   useEffect(() => {
-    if (messagesEndRef.current) {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    if (isNearBottom && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [state.room?.messages]);
+  }, [state.room?.messages?.length]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    actions.sendMessage(input);
+    e.stopPropagation();
+    const trimmed = input.trim();
+    if (!trimmed) return;
+    actions.sendMessage(trimmed);
     setInput('');
     playClickSound();
-  };
+  }, [input, actions]);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      e.stopPropagation();
       handleSubmit(e);
     } else {
       actions.sendTyping();
     }
-  };
+  }, [handleSubmit, actions]);
 
   const formatTime = (isoString) => {
     const d = isoString ? new Date(isoString) : new Date();
@@ -48,6 +57,8 @@ function ChatPanel() {
 
   if (!state.room) return null;
 
+  const messages = state.room.messages || [];
+
   return (
     <div 
       className="flex flex-col h-full w-full"
@@ -64,9 +75,13 @@ function ChatPanel() {
       </div>
       
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1" style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-        {state.room.messages.map((msg, i) => (
-          <div key={i} style={{ color: getMessageColor(msg.type) }}>
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-5 py-3 space-y-1" 
+        style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+      >
+        {messages.map((msg, i) => (
+          <div key={`${msg.timestamp || ''}-${i}`} style={{ color: getMessageColor(msg.type) }}>
             <span style={{ color: 'rgba(255,255,255,0.15)' }}>
               [{formatTime(msg.timestamp)}]
             </span>

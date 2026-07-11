@@ -7,6 +7,7 @@ class Room {
     this.players = this.players || [];
     this.messages = this.messages || [];
     this.mysteryData = this.mysteryData || null;
+    this.status = this.status || 'waiting';
     this.createdAt = this.createdAt || new Date();
     this.updatedAt = this.updatedAt || new Date();
   }

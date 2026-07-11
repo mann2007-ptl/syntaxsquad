@@ -42,11 +42,20 @@ function gameReducer(state, action) {
       return { ...initialState, isConnected: state.isConnected, screen: 'menu' };
     case 'ADD_CHAT_MESSAGE':
       if (!state.room) return state;
+      // Only update the messages array inside room, keeping everything else by reference
+      const existingMsgs = state.room.messages || [];
+      // Deduplicate: skip if last message has same content + playerId + close timestamp
+      const last = existingMsgs[existingMsgs.length - 1];
+      if (last && last.content === action.payload.content && last.playerId === action.payload.playerId) {
+        // Already present (from room-update), skip duplicate
+        return state;
+      }
+      const newMessages = [...existingMsgs, action.payload];
       return {
         ...state,
         room: {
           ...state.room,
-          messages: [...(state.room.messages || []), action.payload]
+          messages: newMessages
         }
       };
     default:

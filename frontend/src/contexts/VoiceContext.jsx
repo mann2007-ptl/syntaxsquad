@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
 import { useGame } from './GameContext.jsx';
 import { fetchVoiceToken } from '../services/voiceApi.js';
@@ -30,15 +30,23 @@ function VoiceController({ children }) {
 
 export function VoiceProvider({ children }) {
   const { state } = useGame();
-  const { roomCode, playerId, playerName, room } = state;
+  const { roomCode, playerId, playerName } = state;
   const [token, setToken] = useState('');
   const [serverUrl, setServerUrl] = useState('');
   const [error, setError] = useState(null);
 
-  // Automatically fetch token when joining a room
+  // Use refs to track the identifiers we already fetched a token for,
+  // so we don't re-fetch on every room-update (which mutates `room`).
+  const connectedRef = useRef(null);
+
+  // Automatically fetch token when joining a room — only depends on stable identifiers
   useEffect(() => {
-    // Only connect if we are genuinely in a room with valid state
-    if (roomCode && playerId && playerName && room) {
+    // Only connect if we are genuinely in a room with valid identity
+    if (roomCode && playerId && playerName) {
+      // Skip if we already have a token for this exact room+player combo
+      const key = `${roomCode}:${playerId}`;
+      if (connectedRef.current === key) return;
+
       let active = true;
 
       const connectVoice = async () => {
@@ -50,6 +58,7 @@ export function VoiceProvider({ children }) {
             setToken(data.token);
             setServerUrl(data.url);
             setError(null);
+            connectedRef.current = key;
             console.log('[Voice] Token acquired, joining LiveKit room...');
           }
         } catch (err) {
@@ -68,9 +77,10 @@ export function VoiceProvider({ children }) {
         console.log('[Voice] Leaving room, clearing tokens...');
         setToken('');
         setServerUrl('');
+        connectedRef.current = null;
       };
     }
-  }, [roomCode, playerId, playerName, room]); // Re-run if these core identifiers change
+  }, [roomCode, playerId, playerName]); // Only re-run when identity changes, NOT on room-update
 
   // If we have a token, render the LiveKit environment
   if (token && serverUrl) {
@@ -79,8 +89,8 @@ export function VoiceProvider({ children }) {
         token={token}
         serverUrl={serverUrl}
         connect={true}
-        // Enable audio automatically upon joining
-        audio={true}
+        // Start with mic OFF — user must explicitly click "Mic On"
+        audio={false}
         video={false}
         options={{
           adaptiveStream: true,
@@ -96,6 +106,7 @@ export function VoiceProvider({ children }) {
         onDisconnected={() => {
           console.log('[Voice] Disconnected from LiveKit edge.');
           setToken(''); // Reset to prevent phantom connections
+          connectedRef.current = null;
         }}
       >
         <VoiceController>
@@ -109,8 +120,8 @@ export function VoiceProvider({ children }) {
 
   // Fallback context provider when not in a room, or waiting for token
   const fallbackValue = {
-    isMuted: false,
-    toggleMute: () => console.log('[Voice] Cannot unmute outside a room'),
+    isMuted: true, // Default to muted when not connected
+    toggleMute: () => console.log('[Voice] Cannot toggle mic outside a room'),
     micError: error,
     initMicrophone: () => Promise.resolve(null),
     remoteStreams: {}

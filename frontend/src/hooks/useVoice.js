@@ -1,14 +1,25 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalParticipant } from '@livekit/components-react';
 
 /**
  * Custom hook to abstract microphone controls.
  * Designed to be used INSIDE the LiveKitRoom context.
+ * 
+ * Mic starts OFF (muted). User must click to enable.
  */
 export function useVoiceControls() {
   const { localParticipant } = useLocalParticipant();
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted
   const [micError, setMicError] = useState(null);
+
+  // Sync our state with the actual mic track state when participant is ready
+  useEffect(() => {
+    if (!localParticipant) return;
+    
+    // Check actual mic state from LiveKit
+    const isMicEnabled = localParticipant.isMicrophoneEnabled;
+    setIsMuted(!isMicEnabled);
+  }, [localParticipant?.isMicrophoneEnabled]);
 
   const toggleMute = useCallback(async () => {
     if (!localParticipant) {

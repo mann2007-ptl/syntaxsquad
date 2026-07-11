@@ -63,7 +63,7 @@ function Lobby() {
             {/* Action Buttons */}
             <div className="flex gap-8 justify-center flex-wrap pt-6" style={{ fontFamily: 'var(--font-family-heading), Cinzel, serif' }}>
               
-              {/* Music Toggle */}
+              {/* Music Toggle — label = action user can take */}
               <button
                 onClick={() => {
                   playClickSound();
@@ -72,15 +72,15 @@ function Lobby() {
                 onMouseEnter={playHoverSound}
                 className="horror-btn text-lg px-8 py-5"
                 style={{
-                  borderColor: musicMuted ? 'rgba(74, 158, 255, 0.6)' : 'rgba(255, 60, 60, 0.6)',
-                  color: musicMuted ? '#4e9eff' : '#ff4d4d'
+                  borderColor: musicMuted ? 'rgba(74, 158, 74, 0.6)' : 'rgba(255, 60, 60, 0.6)',
+                  color: musicMuted ? '#4ea366' : '#ff4d4d'
                 }}
-                title="Toggle Background Music"
+                title={musicMuted ? 'Turn music on' : 'Turn music off'}
               >
-                {musicMuted ? 'Music On' : 'Music Off'}
+                {musicMuted ? '🔇 Unmute Music' : '🔊 Mute Music'}
               </button>
 
-              {/* Mic Toggle */}
+              {/* Mic Toggle — label = action user can take */}
               <button
                 onClick={() => {
                   playClickSound();
@@ -89,12 +89,12 @@ function Lobby() {
                 onMouseEnter={playHoverSound}
                 className="horror-btn text-lg px-8 py-5"
                 style={{
-                  borderColor: !isMuted ? 'rgba(74, 158, 74, 0.6)' : 'rgba(255, 60, 60, 0.6)',
-                  color: !isMuted ? '#4ea366' : '#ff4d4d'
+                  borderColor: isMuted ? 'rgba(74, 158, 74, 0.6)' : 'rgba(255, 60, 60, 0.6)',
+                  color: isMuted ? '#4ea366' : '#ff4d4d'
                 }}
-                title={micError || 'Toggle Microphone'}
+                title={micError || (isMuted ? 'Turn mic on' : 'Turn mic off')}
               >
-                {!isMuted ? 'Mic On' : 'Mic Off'}
+                {isMuted ? '🎙️ Unmute Mic' : '🔇 Mute Mic'}
               </button>
 
               {/* Ready / Unready */}
@@ -129,15 +129,15 @@ function Lobby() {
                     actions.startGame();
                   }}
                   onMouseEnter={playHoverSound}
-                  disabled={connectedPlayers.length < 2 || connectedPlayers.some(p => !p.isReady && !p.isHost)}
+                  disabled={connectedPlayers.length < room.maxPlayers || connectedPlayers.some(p => !p.isReady && !p.isHost)}
                   className="horror-btn text-lg px-12 py-5"
                   style={{
-                    borderColor: connectedPlayers.length >= 2 && !connectedPlayers.some(p => !p.isReady && !p.isHost) ? 'rgba(184, 134, 11, 0.5)' : 'rgba(139, 0, 0, 0.15)',
-                    opacity: connectedPlayers.length >= 2 && !connectedPlayers.some(p => !p.isReady && !p.isHost) ? 1 : 0.6
+                    borderColor: connectedPlayers.length >= room.maxPlayers && !connectedPlayers.some(p => !p.isReady && !p.isHost) ? 'rgba(184, 134, 11, 0.5)' : 'rgba(139, 0, 0, 0.15)',
+                    opacity: connectedPlayers.length >= room.maxPlayers && !connectedPlayers.some(p => !p.isReady && !p.isHost) ? 1 : 0.6
                   }}
                 >
-                  {connectedPlayers.length < 2 
-                    ? `waiting for ${2 - connectedPlayers.length} more` 
+                  {connectedPlayers.length < room.maxPlayers 
+                    ? `waiting for ${room.maxPlayers - connectedPlayers.length} more` 
                     : connectedPlayers.some(p => !p.isReady && !p.isHost)
                       ? 'waiting for players to be ready'
                       : 'start game'}
