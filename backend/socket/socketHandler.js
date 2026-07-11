@@ -475,6 +475,72 @@ export default function setupSocketHandlers(io) {
       }
     });
 
+    // ─── PRIVATE CHAT ───
+    socket.on('request-private-chat', (data) => {
+      // data: { roomCode, fromPlayerId, toPlayerId, fromPlayerName }
+      const { roomCode, fromPlayerId, toPlayerId, fromPlayerName } = data;
+      
+      // Find the target player's socket
+      Room.findOne({ roomCode }).then(room => {
+        if (!room) return;
+        const targetPlayer = room.players.find(p => p.playerId === toPlayerId);
+        if (targetPlayer && targetPlayer.socketId) {
+          io.to(targetPlayer.socketId).emit('private-chat-request', {
+            fromPlayerId,
+            fromPlayerName,
+            toPlayerId
+          });
+        }
+      }).catch(err => console.error('[Socket] request-private-chat error:', err));
+    });
+
+    socket.on('accept-private-chat', (data) => {
+      // data: { roomCode, fromPlayerId, toPlayerId, toPlayerName }
+      const { roomCode, fromPlayerId, toPlayerId, toPlayerName } = data;
+      
+      // Find both players' sockets
+      Room.findOne({ roomCode }).then(room => {
+        if (!room) return;
+        const fromPlayer = room.players.find(p => p.playerId === fromPlayerId);
+        const toPlayer = room.players.find(p => p.playerId === toPlayerId);
+        
+        if (fromPlayer && fromPlayer.socketId && toPlayer && toPlayer.socketId) {
+          io.to(fromPlayer.socketId).emit('private-chat-started', {
+            otherPlayerId: toPlayerId,
+            otherPlayerName: toPlayerName
+          });
+          io.to(toPlayer.socketId).emit('private-chat-started', {
+            otherPlayerId: fromPlayerId,
+            otherPlayerName: fromPlayer.name
+          });
+        }
+      }).catch(err => console.error('[Socket] accept-private-chat error:', err));
+    });
+
+    socket.on('private-message', (data) => {
+      // data: { roomCode, fromPlayerId, toPlayerId, fromPlayerName, content }
+      const { roomCode, fromPlayerId, toPlayerId, fromPlayerName, content } = data;
+      
+      if (!content || content.trim().length === 0) return;
+      const sanitizedContent = sanitizeString(content, 500);
+      
+      // Find the target player's socket
+      Room.findOne({ roomCode }).then(room => {
+        if (!room) return;
+        const targetPlayer = room.players.find(p => p.playerId === toPlayerId);
+        if (targetPlayer && targetPlayer.socketId) {
+          const message = {
+            fromPlayerId,
+            toPlayerId,
+            fromPlayerName,
+            content: sanitizedContent,
+            timestamp: new Date()
+          };
+          io.to(targetPlayer.socketId).emit('private-message', message);
+        }
+      }).catch(err => console.error('[Socket] private-message error:', err));
+    });
+
     // ─── LEAVE ROOM ───
     socket.on('leave-room', async (data, callback) => {
       try {

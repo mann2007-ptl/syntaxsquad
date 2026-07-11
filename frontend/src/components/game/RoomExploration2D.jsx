@@ -72,6 +72,8 @@ export default function RoomExploration2D() {
   const [inspectedClue, setInspectedClue] = useState(null);
   const [discoveredClues, setDiscoveredClues] = useState([]);
   const [showSuspects, setShowSuspects] = useState(false);
+  const [nearbyPlayer, setNearbyPlayer] = useState(null); // { playerId, name }
+  const [privateChatInput, setPrivateChatInput] = useState('');
   
   const mapRef = useRef(null);
   const wasMovingRef = useRef(false);
@@ -220,6 +222,31 @@ export default function RoomExploration2D() {
     }
   }, [localPos, cluesData]);
 
+  // Detect nearby players for private chat
+  useEffect(() => {
+    let closestPlayer = null;
+    let minDistance = Infinity;
+    const PROXIMITY_RADIUS = 100;
+
+    Object.entries(otherPlayers).forEach(([playerId, player]) => {
+      if (playerId === state.playerId) return;
+
+      const px = localPos.x + PLAYER_SIZE / 2;
+      const py = localPos.y + PLAYER_SIZE / 2;
+      const otherPx = player.x + PLAYER_SIZE / 2;
+      const otherPy = player.y + PLAYER_SIZE / 2;
+      
+      const dist = Math.sqrt(Math.pow(px - otherPx, 2) + Math.pow(py - otherPy, 2));
+      if (dist < minDistance && dist <= PROXIMITY_RADIUS) {
+        minDistance = dist;
+        const suspectName = mystery?.suspects?.find(s => s.playerId === playerId)?.name || 'Unknown';
+        closestPlayer = { playerId, name: suspectName };
+      }
+    });
+
+    setNearbyPlayer(closestPlayer);
+  }, [localPos, otherPlayers, state.playerId, mystery?.suspects]);
+
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key.toLowerCase() === 'e' && nearbyClue && !inspectedClue) {
@@ -228,13 +255,22 @@ export default function RoomExploration2D() {
         if (!discoveredClues.find(c => c.name === nearbyClue.name)) {
           setDiscoveredClues(prev => [...prev, nearbyClue]);
         }
-      } else if (e.key === 'Escape' && inspectedClue) {
-        setInspectedClue(null);
+      } else if (e.key.toLowerCase() === 't' && nearbyPlayer && !state.activePrivateChat && !state.privateChatRequest) {
+        // Request private chat
+        actions.requestPrivateChat(nearbyPlayer.playerId);
+      } else if (e.key === 'Escape') {
+        if (inspectedClue) {
+          setInspectedClue(null);
+        } else if (state.activePrivateChat) {
+          actions.endPrivateChat();
+        } else if (state.privateChatRequest) {
+          actions.rejectPrivateChat();
+        }
       }
     };
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [nearbyClue, inspectedClue, discoveredClues]);
+  }, [nearbyClue, inspectedClue, discoveredClues, nearbyPlayer, state.activePrivateChat, state.privateChatRequest, actions]);
 
   // Camera Follow
   const cameraStyle = {
@@ -488,9 +524,140 @@ export default function RoomExploration2D() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/90 border border-[#daa520] px-6 py-3 rounded text-[#daa520] font-bold tracking-widest"
+            className="absolute bottom-40 left-1/2 -translate-x-1/2 bg-black/90 border border-[#daa520] px-6 py-3 rounded text-[#daa520] font-bold tracking-widest"
           >
             PRESS [E] TO INSPECT {nearbyClue.name.toUpperCase()}
+          </motion.div>
+        )}
+        {nearbyPlayer && !state.activePrivateChat && !state.privateChatRequest && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/90 border border-purple-500 px-6 py-3 rounded text-purple-400 font-bold tracking-widest"
+          >
+            PRESS [T] TO TALK TO {nearbyPlayer.name.toUpperCase()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Private Chat Request Modal */}
+      <AnimatePresence>
+        {state.privateChatRequest && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-md bg-[rgba(15,10,8,0.95)] border border-purple-500 p-8 shadow-[0_0_50px_rgba(128,0,128,0.2)]"
+              style={{ backgroundImage: `url(${wallTexture})`, backgroundBlendMode: 'overlay', backgroundSize: '200px' }}
+            >
+              <h2 className="text-2xl text-purple-300 mb-6 font-serif">Private Chat Request</h2>
+              <p className="text-[rgba(200,180,150,0.8)] mb-8 leading-relaxed">
+                {state.privateChatRequest.fromPlayerName} wants to talk to you privately.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => actions.acceptPrivateChat(state.privateChatRequest.fromPlayerId, state.privateChatRequest.fromPlayerName)}
+                  className="flex-1 py-3 bg-purple-900/50 border border-purple-500 text-purple-300 hover:bg-purple-900/70 transition-all uppercase tracking-widest text-sm"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={actions.rejectPrivateChat}
+                  className="flex-1 py-3 bg-[rgba(139,0,0,0.2)] border border-[rgba(139,0,0,0.4)] text-[rgba(200,160,120,0.8)] hover:bg-[rgba(139,0,0,0.4)] transition-all uppercase tracking-widest text-sm"
+                >
+                  Reject
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Private Chat Modal */}
+      <AnimatePresence>
+        {state.activePrivateChat && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4 pointer-events-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="w-full max-w-lg h-full max-h-[80vh] bg-[rgba(15,10,8,0.95)] border border-purple-500 p-6 shadow-[0_0_50px_rgba(128,0,128,0.2)] flex flex-col"
+              style={{ backgroundImage: `url(${wallTexture})`, backgroundBlendMode: 'overlay', backgroundSize: '200px' }}
+            >
+              <div className="flex justify-between items-center mb-4 border-b border-purple-500/30 pb-3">
+                <h2 className="text-xl text-purple-300 font-serif">Private Chat with {state.activePrivateChat.otherPlayerName}</h2>
+                <button
+                  onClick={actions.endPrivateChat}
+                  className="px-3 py-1 bg-[rgba(139,0,0,0.2)] border border-[rgba(139,0,0,0.4)] text-[rgba(200,160,120,0.8)] hover:bg-[rgba(139,0,0,0.4)] transition-all uppercase tracking-widest text-xs"
+                >
+                  Close
+                </button>
+              </div>
+              
+              {/* Messages List */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4 custom-scrollbar">
+                {state.privateMessages
+                  .filter(msg => 
+                    (msg.fromPlayerId === state.playerId && msg.toPlayerId === state.activePrivateChat.otherPlayerId) ||
+                    (msg.fromPlayerId === state.activePrivateChat.otherPlayerId && msg.toPlayerId === state.playerId)
+                  )
+                  .map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex ${msg.fromPlayerId === state.playerId ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] px-4 py-2 rounded-lg ${
+                          msg.fromPlayerId === state.playerId
+                            ? 'bg-purple-900/60 border border-purple-500/50'
+                            : 'bg-black/60 border border-gray-700'
+                        }`}
+                      >
+                        <p className="text-xs text-gray-400 mb-1">{msg.fromPlayerName}</p>
+                        <p className="text-[rgba(200,180,150,0.9)]">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              
+              {/* Input */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={privateChatInput}
+                  onChange={(e) => setPrivateChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && privateChatInput.trim()) {
+                      actions.sendPrivateMessage(privateChatInput);
+                      setPrivateChatInput('');
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-black/60 border border-purple-500/30 px-4 py-2 text-[rgba(200,180,150,0.9)] focus:outline-none focus:border-purple-500 transition-all"
+                />
+                <button
+                  onClick={() => {
+                    if (privateChatInput.trim()) {
+                      actions.sendPrivateMessage(privateChatInput);
+                      setPrivateChatInput('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-purple-900/60 border border-purple-500 text-purple-300 hover:bg-purple-900/80 transition-all"
+                >
+                  Send
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
